@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>Poker Tournament Clock</title>
+
+<!-- 웹폰트 -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+
+<style>
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        background: #000;
+        color: #fff;
+        font-family: "Montserrat", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        overflow: hidden;
+    }
+
+    .app-container {
+        padding: 10px 16px;
+        color: #fff;
+    }
+
+    /* ======= 탭 영역 ======= */
+    .tabs {
+        margin-bottom: 8px;
+    }
+    .tab-btn {
+        padding: 8px 16px;
+        margin-right: 6px;
+        border: none;
+        cursor: pointer;
+        background: #222;
+        color: #f5f5f5;
+        border-radius: 20px;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+    }
+    .tab-btn.active {
+        background: #ffcc33;
+        color: #111;
+        font-weight: 700;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ======= 디스플레이 영역 ======= */
+    #displayTab {
+        width: 100vw;
+        height: calc(100vh - 40px);
+        padding: 0;
+        margin: 0;
+    }
+
+    .board-bg {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        /* 기본 배경 (변경 가능) */
+        background-image: url("https://images.pexels.com/photos/131616/pexels-photo-131616.jpeg?auto=compress&cs=tinysrgb&w=1600");
+        background-size: cover;
+        background-position: center;
+    }
+    .board-overlay {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at center, rgba(0,0,0,0.35) 0, rgba(0,0,0,0.85) 70%);
+    }
+
+    .board-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        height: 100%;
+        width: 100%;
+        padding: 26px 32px;
+        color: #fff;
+    }
+
+    .col-left, .col-center, .col-right {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .col-left {
+        width: 30%;
+        text-align: left;
+        padding-right: 26px;
+        border-right: 1px solid rgba(255,255,255,0.18);
+        justify-content: flex-start;
+        gap: 28px;
+    }
+    .col-center {
+        width: 46%;
+        align-items: center;
+        text-align: center;
+        padding: 0 30px;
+        justify-content: center;
+    }
+    .col-right {
+        width: 24%;
+        padding-left: 15px;
+        border-left: 1px solid rgba(255,255,255,0.18);
+        text-align: right;
+        justify-content: flex-start;
+        align-items: stretch;
+    }
+
+    /* ======= 좌측 영역 ======= */
+    .logo-area {
+        margin-bottom: 18px;
+        font-size: 18px;
+        letter-spacing: 2px;
+        font-weight: 600;
+        color: #f5f5f5;
+    }
+
+    .info-block-title {
+        font-size: 26px;
+        letter-spacing: 3px;
+        margin-bottom: 6px;
+        color: #ffdd55;
+        font-weight: 700;
+        font-family: "Bebas Neue", sans-serif;
+    }
+    .game-title-main {
+        font-size: 52px;
+        letter-spacing: 6px;
+        margin-bottom: 4px;
+        font-weight: 900;
+        font-family: "Bebas Neue", sans-serif;
+    }
+    .game-title-sub {
+        font-size: 18px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: #f0f0f0;
+        margin-bottom: 18px;
+    }
+
+    .info-small {
+        font-size: 20px;
+        line-height: 1.9;
+        color: #f1f1f1;
+        white-space: pre-line;
+        margin-top: 10px;
+        letter-spacing: 0.5px;
+    }
+
+    .prize-title {
+        margin-top: 40px; /* PRIZE 살짝 아래로 */
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        color: #ffdd55;
+        font-family: "Bebas Neue", sans-serif;
+    }
+    .prize-text {
+        font-size: 20px;
+        white-space: pre-wrap;
+        line-height: 1.9;
+        margin-top: 10px;
+        color: #f8f8f8;
+        letter-spacing: 0.5px;
+    }
+
+    /* ======= 중앙 영역 ======= */
+    .center-main-title {
+        text-align: center;
+        font-size: 70px;
+        letter-spacing: 6px;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        color: #ffdd55;
+        font-weight: 900;
+        font-family: "Bebas Neue", sans-serif;
+    }
+
+    .center-top-title {
+        text-align: center;
+        font-size: 30px;
+        letter-spacing: 5px;
+        margin-bottom: 30px;
+        text-transform: uppercase;
+        color: #f1f1f1;
+        font-weight: 700;
+        font-family: "Bebas Neue", sans-serif;
+    }
+
+    #displayBreakLabel {
+        font-size: 34px;
+        letter-spacing: 4px;
+        margin-bottom: 12px;
+        color: #66e6ff;
+        font-weight: 700;
+        font-family: "Bebas Neue", sans-serif;
+    }
+
+    .timer-main {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 300px;
+        font-weight: 900;
+        letter-spacing: 14px;
+        margin: 0;
+        line-height: 1;
+        text-shadow: 0 0 24px rgba(0,0,0,0.9);
+    }
+    .timer-main.break {
+        font-size: 260px;
+        color: #66e6ff;
+    }
+
+    .center-blinds {
+        font-size: 44px;
+        margin-top: 20px;
+        letter-spacing: 5px;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+    .center-ante {
+        font-size: 32px;
+        margin-top: 8px;
+        letter-spacing: 4px;
+    }
+    .next-level-line {
+        font-size: 24px;
+        margin-top: 34px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: #f5f5f5;
+    }
+
+    /* ======= 우측 영역 ======= */
+    .right-top {
+        text-align: right;
+        margin-top: 15px;
+        margind-bottom: 24px;
+    }
+    .right-level-label {
+        font-size: 70px;
+        letter-spacing: 6px;
+        margin-bottom: 18px;
+        font-weight: 800;
+        font-family: "Bebas Neue", sans-serif;
+    }
+
+    .stats-wrapper {
+        margin-top: 0px;
+        align-self: flex-start;
+        text-align: left;
+    }
+    .stat-block {
+        margin-top: 12px;
+    }
+    .stat-label {
+        font-size: 22px;
+        letter-spacing: 2px;
+        opacity: 0.9;
+        text-transform: uppercase;
+        color: #e0e0e0;
+    }
+    .stat-value {
+        font-size: 60px;
+        font-weight: 800;
+        margin-top: 4px;
+        color: #ffffff;
+        font-family: "Bebas Neue", sans-serif;
+    }
+    /* TOTAL CHIPS는 다른 값들과 동일 크기 유지 */
+    #totalChips {
+        font-size: 60px;
+    }
+
+    /* ======= 관리자 탭 ======= */
+    #adminTab {
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+        color: #fff;
+    }
+    .section {
+        margin-bottom: 18px;
+        padding: 12px 16px;
+        background: #101010;
+        border-radius: 10px;
+        border: 1px solid #303030;
+    }
+    .section h2 {
+        margin: 0 0 10px 0;
+        font-size: 18px;
+    }
+    .small-text {
+        font-size: 12px;
+        opacity: 0.9;
+    }
+
+    input, textarea, select {
+        background: #1c1c1c;
+        border: 1px solid #555;
+        color: #fff;
+        border-radius: 4px;
+        padding: 4px 6px;
+        font-size: 13px;
+        font-family: inherit;
+    }
+    textarea {
+        width: 100%;
+        min-height: 80px;
+        resize: vertical;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+    th, td {
+        border: 1px solid #555;
+        padding: 4px;
+        text-align: center;
+    }
+    th {
+        background: #181818;
+    }
+
+    .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    .chip-row label {
+        font-size: 13px;
+    }
+    .chip-row span {
+        font-weight: 700;
+        font-size: 18px;
+        min-width: 40px;
+        text-align: center;
+    }
+    .btn-small {
+        font-size: 12px;
+        padding: 3px 8px;
+        margin: 1px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        background: #333;
+        color: #fff;
+    }
+    .btn-small:hover {
+        background: #555;
+    }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- 상단 탭 / 버튼 -->
+    <div class="tabs">
+        <button id="displayTabBtn" class="tab-btn active" onclick="showTab('display')">디스플레이</button>
+        <button id="adminTabBtn" class="tab-btn" onclick="showTab('admin')">관리자</button>
+        <button id="openDisplayBtn" class="tab-btn" onclick="openDisplayWindow()">디스플레이 전용 창 열기</button>
+    </div>
+
+    <!-- 디스플레이 탭 -->
+    <div id="displayTab" class="tab-content active">
+        <div class="board-bg">
+            <div class="board-overlay"></div>
+            <div class="board-content">
+                <!-- LEFT -->
+                <div class="col-left">
+                    <div>
+                        <div class="logo-area">
+                            GLOBAL POKER INDEX / KPT
+                        </div>
+
+                        <div class="info-block-title">RANKING GTD</div>
+                        <div class="game-title-main" id="displayMainTitle">THE KING</div>
+                        <div class="game-title-sub" id="displaySubTitle">THE KING DAILY GAME</div>
+
+                        <div style="margin-top:32px;">
+                            <div class="info-block-title">GAME INFO</div>
+                            <div class="info-small" id="displayGameInfo">
+STARTING STACK: 10,000
+LATE REG: LEVEL 6 END
+RE-ENTRY / RE-BUY AVAILABLE
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="prize-title">PRIZE</div>
+                        <div class="prize-text" id="displayPrizeText"></div>
+                    </div>
+                </div>
+
+                <!-- CENTER -->
+                <div class="col-center">
+                    <div class="center-main-title" id="displayCenterMainTitle">THE KING</div>
+                    <div class="center-top-title" id="displayCenterTitle">THE KING DAILY GAME</div>
+
+                    <div>
+                        <div id="displayBreakLabel"></div>
+                        <div id="timer" class="timer-main">20:00</div>
+                        <div id="blindsLine" class="center-blinds">BLINDS: 100 / 200</div>
+                        <div id="anteLine" class="center-ante">ANTE: 0</div>
+                    </div>
+
+                    <div class="next-level-line" id="nextLevelLine">
+                        NEXT LEVEL: LV2 200 / 400 / ANTE: 0
+                    </div>
+                </div>
+
+                <!-- RIGHT -->
+                <div class="col-right">
+                    <div class="right-top">
+                        <div class="right-level-label" id="rightLevelLabel">LEVEL 1</div>
+                    </div>
+
+                    <div class="stats-wrapper">
+                        <div class="stat-block">
+                            <div class="stat-label">TOTAL TIME</div>
+                            <div class="stat-value" id="totalTimeDisplay">00:00:00</div>
+                        </div>
+
+                        <div class="stat-block">
+                            <div class="stat-label">TOTAL CHIPS</div>
+                            <div class="stat-value" id="totalChips">0</div>
+                        </div>
+
+                        <div class="stat-block">
+                            <div class="stat-label">AVR STACK</div>
+                            <div class="stat-value" id="avg">0</div>
+                        </div>
+
+                        <div class="stat-block">
+                            <div class="stat-label">PLAYER</div>
+                            <div class="stat-value" id="players">0</div>
+                        </div>
+
+                        <div class="stat-block">
+                            <div class="stat-label">ENTRY</div>
+                            <div class="stat-value" id="entry">0</div>
+                        </div>
+
+                        <div class="stat-block">
+                            <div class="stat-label">NEXT BREAK</div>
+                            <div class="stat-value" id="nextBreakDisplay">--:--:--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 관리자 탭 -->
+    <div id="adminTab" class="tab-content">
+        <div class="section">
+            <h2>타이머 / 레벨 컨트롤</h2>
+            <div class="small-text">
+                현재 레벨: <span id="adminCurrentLevel">1</span> /
+                남은 시간: <span id="adminTimerText">20:00</span> /
+                블라인드: <span id="adminBlindsText">100 / 200 / ANTE 0</span>
+            </div>
+            <div style="margin-top:10px;">
+                <button onclick="prevLevel()">◀ 레벨 다운</button>
+                <button onclick="nextLevel()">레벨 업 ▶</button>
+                <button onclick="toggleTimer()">⏯ 시작/정지</button>
+                <button onclick="resetTimer()">🔄 리셋</button>
+            </div>
+            <div style="margin-top:12px;">
+                <div class="small-text">레벨 바로 이동</div>
+                <div id="levelButtonsAdmin"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>레벨 / 블라인드 구조</h2>
+            <p class="small-text">
+                브레이크 레벨은 "Break?" 체크 후 ANTE, SB/BB를 0 또는 원하는 값으로 설정하세요.
+            </p>
+            <button onclick="addLevel()">➕ 레벨 추가</button>
+            <table style="margin-top:10px;">
+                <thead>
+                    <tr>
+                        <th>레벨</th>
+                        <th>SB</th>
+                        <th>BB</th>
+                        <th>ANTE</th>
+                        <th>시간(분)</th>
+                        <th>Break?</th>
+                        <th>작업</th>
+                    </tr>
+                </thead>
+                <tbody id="levelTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>스트럭쳐 프리셋 (데일리 / 메인 / 이벤트 등)</h2>
+            <div class="small-text" style="margin-bottom:6px;">
+                - 현재 레벨 구조를 이름으로 저장해두고 게임별로 불러와서 사용할 수 있습니다.<br>
+                - 예) "Daily 10k", "Main 30k", "Event Turbo" 등으로 저장.
+            </div>
+            <div style="margin-bottom:6px;">
+                프리셋 이름:
+                <input id="structureNameInput" style="width: 200px;" placeholder="예) THE KING DAILY" />
+                <button class="btn-small" onclick="saveCurrentStructureAsPreset()">현재 구조 저장</button>
+            </div>
+            <div>
+                저장된 프리셋:
+                <select id="structureSelect" style="width: 220px;"></select>
+                <button class="btn-small" onclick="loadStructurePreset()">불러오기</button>
+                <button class="btn-small" onclick="deleteStructurePreset()">삭제</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>칩 / 엔트리 관리</h2>
+
+            <div class="chip-row">
+                <label>바이인 스택:</label>
+                <input type="number" id="buyInStackInput" value="20000" style="width: 120px;" onchange="updateChipSettings()" />
+                <label>리바이 스택:</label>
+                <input type="number" id="rebuyStackInput" value="20000" style="width: 120px;" onchange="updateChipSettings()" />
+                <label>예약칩 스택:</label>
+                <input type="number" id="reserveStackInput" value="20000" style="width: 120px;" onchange="updateChipSettings()" />
+            </div>
+
+            <div class="chip-row">
+                <label>바이인:</label>
+                <button class="btn-small" onclick="addBuyIn(-1)">-</button>
+                <span id="buyInCount">0</span>
+                <button class="btn-small" onclick="addBuyIn(1)">+1</button>
+            </div>
+
+            <div class="chip-row">
+                <label>리바이:</label>
+                <button class="btn-small" onclick="addRebuy(-1)">-</button>
+                <span id="rebuyCount">0</span>
+                <button class="btn-small" onclick="addRebuy(1)">+1</button>
+            </div>
+
+            <div class="chip-row">
+                <label>예약칩:</label>
+                <button class="btn-small" onclick="addReserve(-1)">-</button>
+                <span id="reserveCount">0</span>
+                <button class="btn-small" onclick="addReserve(1)">+1</button>
+            </div>
+
+            <div class="chip-row">
+                <label>플레이어 수:</label>
+                <input type="number" id="playerInputAdmin" style="width: 120px;" />
+                <button class="btn-small" onclick="updatePlayersFromAdmin()">적용</button>
+            </div>
+
+            <div style="margin-top:8px;" class="small-text">
+                엔트리(바이인+리바이): <span id="entryAdmin">0</span> /
+                총 칩: <span id="totalChipsAdmin">0</span> /
+                에버칩: <span id="avgAdmin">0</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>프라이즈 / 텍스트</h2>
+            <div class="chip-row">
+                <label>레지 마감 여부:</label>
+                <input type="checkbox" id="regClosedCheckbox" onchange="updatePrizeState()" />
+                <span style="font-size:12px;">체크 시 디스플레이에 PRIZE 내용 표시</span>
+            </div>
+            <div style="margin-top:6px;">
+                <label>PRIZE 내용 (디스플레이 좌측 하단에 그대로 보여집니다)</label>
+                <textarea id="prizeInput" placeholder="예) 1등: 50% + 티켓&#10;2등: 30%&#10;3등: 20%"></textarea>
+                <button style="margin-top:6px;" onclick="applyPrizeText()">PRIZE 적용</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>타이틀 / 게임 정보 텍스트</h2>
+            <div style="margin-bottom:4px;">
+                메인 타이틀: <input id="mainTitleInput" style="width: 200px;" value="THE KING" />
+                서브 타이틀: <input id="subTitleInput" style="width: 260px;" value="THE KING DAILY GAME" />
+            </div>
+            <div style="margin-bottom:4px;">
+                센터 메인 타이틀: <input id="centerMainTitleInput" style="width: 200px;" value="THE KING" />
+                상단 중앙 타이틀: <input id="centerTitleInput" style="width: 260px;" value="THE KING DAILY GAME" />
+            </div>
+            <div style="margin-top:6px;">
+                <label>GAME INFO (줄바꿈 기준으로 한 줄씩 표시)</label>
+                <textarea id="gameInfoInput">STARTING STACK: 10,000
+LATE REG: LEVEL 6 END
+RE-ENTRY / RE-BUY AVAILABLE</textarea>
+                <button style="margin-top:6px;" onclick="applyInfoTexts()">텍스트 적용</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>배경 이미지 설정</h2>
+            <div class="small-text" style="margin-bottom:6px;">
+                - URL 직접 입력 또는 파일 선택으로 디스플레이 배경을 변경할 수 있습니다.<br>
+                - 파일 선택 시 브라우저에만 저장되며, 관리자/디스플레이 창 모두 동일하게 적용됩니다.
+            </div>
+            <div style="margin-bottom:8px;">
+                배경 이미지 URL:
+                <input id="bgUrlInput" style="width: 260px;" placeholder="https:// 예) 이미지 주소" />
+                <button class="btn-small" onclick="applyBgFromUrl()">URL 적용</button>
+            </div>
+            <div>
+                파일 선택:
+                <input type="file" id="bgFileInput" accept="image/*" onchange="handleBgFile(this)" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ---- 모드 판별 ---- */
+const urlParams = new URLSearchParams(window.location.search);
+const isDisplayOnly = urlParams.get('mode') === 'display';
+
+/* ---- 구조 데이터 ---- */
+let structure = [
+    { level: 1, sb: 100,  bb: 200,  ante: 0, time: 20, isBreak: false },
+    { level: 2, sb: 200,  bb: 400,  ante: 0, time: 20, isBreak: false },
+    { level: 3, sb: 300,  bb: 600,  ante: 0, time: 20, isBreak: false },
+    { level: 4, sb: 0,    bb: 0,    ante: 0, time: 10, isBreak: true  },
+    { level: 5, sb: 500,  bb: 1000, ante: 0, time: 20, isBreak: false },
+];
+
+let currentLevel = 0;
+let timeLeft = structure[0].time * 60;
+let timerRunning = false;
+let timer;
+let elapsedSeconds = 0;
+
+/* ---- 칩 / 엔트리 ---- */
+let players = 0;
+let buyInStack   = 20000;
+let rebuyStack   = 20000;
+let reserveStack = 20000;
+let buyInCount   = 0;
+let rebuyCount   = 0;
+let reserveCount = 0;
+
+/* ---- PRIZE / 텍스트 ---- */
+let regClosed = false;
+let prizeText = "";
+
+/* ---- 배경 이미지 ---- */
+let bgImage = ""; // URL 또는 dataURL
+
+/* ---- 스트럭쳐 프리셋 ---- */
+let structurePresets = {};  // { name: [structure...] }
+
+/* ---- 상태 저장 ---- */
+const STORAGE_KEY = "pokerClockStateV2";
+const PRESET_KEY  = "pokerClockStructuresV1";
+
+function getState() {
+    return {
+        structure,
+        currentLevel,
+        timeLeft,
+        timerRunning,
+        elapsedSeconds,
+        players,
+        buyInStack,
+        rebuyStack,
+        reserveStack,
+        buyInCount,
+        rebuyCount,
+        reserveCount,
+        regClosed,
+        prizeText,
+        bgImage,
+        mainTitle: document.getElementById("mainTitleInput")?.value || "",
+        subTitle: document.getElementById("subTitleInput")?.value || "",
+        centerMainTitle: document.getElementById("centerMainTitleInput")?.value || "",
+        centerTitle: document.getElementById("centerTitleInput")?.value || "",
+        gameInfo: document.getElementById("gameInfoInput")?.value || ""
+    };
+}
+
+function applyState(state) {
+    if (!state) return;
+    if (state.structure) structure = state.structure;
+    if (typeof state.currentLevel === "number") currentLevel = state.currentLevel;
+    if (typeof state.timeLeft === "number") timeLeft = state.timeLeft;
+    if (typeof state.timerRunning === "boolean") timerRunning = state.timerRunning;
+    if (typeof state.elapsedSeconds === "number") elapsedSeconds = state.elapsedSeconds;
+    if (typeof state.players === "number") players = state.players;
+    if (typeof state.buyInStack === "number") buyInStack = state.buyInStack;
+    if (typeof state.rebuyStack === "number") rebuyStack = state.rebuyStack;
+    if (typeof state.reserveStack === "number") reserveStack = state.reserveStack;
+    if (typeof state.buyInCount === "number") buyInCount = state.buyInCount;
+    if (typeof state.rebuyCount === "number") rebuyCount = state.rebuyCount;
+    if (typeof state.reserveCount === "number") reserveCount = state.reserveCount;
+    if (typeof state.regClosed === "boolean") regClosed = state.regClosed;
+    if (typeof state.prizeText === "string") prizeText = state.prizeText;
+    if (typeof state.bgImage === "string") bgImage = state.bgImage;
+
+    if (!isDisplayOnly) {
+        const bInStackInput = document.getElementById("buyInStackInput");
+        if (bInStackInput) bInStackInput.value = buyInStack;
+        const rbStackInput = document.getElementById("rebuyStackInput");
+        if (rbStackInput) rbStackInput.value = rebuyStack;
+        const rvStackInput = document.getElementById("reserveStackInput");
+        if (rvStackInput) rvStackInput.value = reserveStack;
+        const playerAdmin = document.getElementById("playerInputAdmin");
+        if (playerAdmin) playerAdmin.value = players;
+
+        document.getElementById("regClosedCheckbox").checked = regClosed;
+        document.getElementById("prizeInput").value = prizeText;
+
+        if (state.mainTitle) document.getElementById("mainTitleInput").value = state.mainTitle;
+        if (state.subTitle) document.getElementById("subTitleInput").value = state.subTitle;
+        if (state.centerMainTitle) document.getElementById("centerMainTitleInput").value = state.centerMainTitle;
+        if (state.centerTitle) document.getElementById("centerTitleInput").value = state.centerTitle;
+        if (state.gameInfo) document.getElementById("gameInfoInput").value = state.gameInfo;
+
+        const bgUrlInput = document.getElementById("bgUrlInput");
+        if (bgUrlInput && bgImage && !bgImage.startsWith("data:")) {
+            bgUrlInput.value = bgImage;
+        }
+    }
+
+    applyInfoTexts(true);
+    applyPrizeText(true);
+    applyBackground(true);
+    renderLevelTable();
+    render(true);
+}
+
+function saveState() {
+    if (isDisplayOnly) return;
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(getState()));
+    } catch (e) {
+        console.warn("상태 저장 실패:", e);
+    }
+}
+
+window.addEventListener("storage", (e) => {
+    if (e.key === STORAGE_KEY && isDisplayOnly) {
+        const newState = e.newValue ? JSON.parse(e.newValue) : null;
+        applyState(newState);
+    } else if (e.key === PRESET_KEY && !isDisplayOnly) {
+        const newPresets = e.newValue ? JSON.parse(e.newValue) : {};
+        structurePresets = newPresets;
+        refreshStructurePresetUI();
+    }
+});
+
+/* ---- 스트럭쳐 프리셋 저장/로드 ---- */
+function loadStructurePresets() {
+    try {
+        const saved = localStorage.getItem(PRESET_KEY);
+        if (saved) {
+            structurePresets = JSON.parse(saved);
+        } else {
+            structurePresets = {};
+        }
+    } catch (e) {
+        console.warn("스트럭쳐 프리셋 로드 실패:", e);
+        structurePresets = {};
+    }
+    refreshStructurePresetUI();
+}
+
+function saveStructurePresets() {
+    try {
+        localStorage.setItem(PRESET_KEY, JSON.stringify(structurePresets));
+    } catch (e) {
+        console.warn("스트럭쳐 프리셋 저장 실패:", e);
+    }
+}
+
+function refreshStructurePresetUI() {
+    const sel = document.getElementById("structureSelect");
+    if (!sel) return;
+    sel.innerHTML = "";
+    const names = Object.keys(structurePresets).sort();
+    names.forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        sel.appendChild(opt);
+    });
+}
+
+function deepCopyStructure(src) {
+    return JSON.parse(JSON.stringify(src));
+}
+
+function saveCurrentStructureAsPreset() {
+    if (isDisplayOnly) return;
+    const nameInput = document.getElementById("structureNameInput");
+    const name = nameInput.value.trim();
+    if (!name) {
+        alert("프리셋 이름을 입력해주세요. (예: THE KING DAILY)");
+        return;
+    }
+    structurePresets[name] = deepCopyStructure(structure);
+    saveStructurePresets();
+    refreshStructurePresetUI();
+    alert(`"${name}" 스트럭쳐가 저장되었습니다.`);
+}
+
+function loadStructurePreset() {
+    if (isDisplayOnly) return;
+    const sel = document.getElementById("structureSelect");
+    const name = sel.value;
+    if (!name || !structurePresets[name]) {
+        alert("불러올 프리셋을 선택해주세요.");
+        return;
+    }
+    structure = deepCopyStructure(structurePresets[name]);
+    renumberLevels();
+    currentLevel = 0;
+    timeLeft = structure[0].time * 60;
+    elapsedSeconds = 0;
+    renderLevelTable();
+    render();
+    playBeep();
+    alert(`"${name}" 스트럭쳐가 적용되었습니다.`);
+}
+
+function deleteStructurePreset() {
+    if (isDisplayOnly) return;
+    const sel = document.getElementById("structureSelect");
+    const name = sel.value;
+    if (!name || !structurePresets[name]) {
+        alert("삭제할 프리셋을 선택해주세요.");
+        return;
+    }
+    if (!confirm(`"${name}" 프리셋을 삭제할까요?`)) return;
+    delete structurePresets[name];
+    saveStructurePresets();
+    refreshStructurePresetUI();
+}
+
+/* ---- 배경 이미지 적용 ---- */
+function applyBackground(skipSave) {
+    const board = document.querySelector(".board-bg");
+    if (!board) return;
+
+    if (bgImage && bgImage.trim() !== "") {
+        board.style.backgroundImage = `url('${bgImage}')`;
+    } else {
+        board.style.backgroundImage =
+            "url('https://images.pexels.com/photos/131616/pexels-photo-131616.jpeg?auto=compress&cs=tinysrgb&w=1600')";
+    }
+    if (!skipSave) saveState();
+}
+
+function applyBgFromUrl() {
+    if (isDisplayOnly) return;
+    const url = document.getElementById("bgUrlInput").value.trim();
+    if (!url) return;
+    bgImage = url;
+    applyBackground();
+}
+
+function handleBgFile(input) {
+    if (isDisplayOnly) return;
+    const file = input.files && input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        bgImage = e.target.result;
+        applyBackground();
+    };
+    reader.readAsDataURL(file);
+}
+
+/* ---- 탭 / 새창 ---- */
+function showTab(tabName) {
+    if (isDisplayOnly && tabName === "admin") return;
+
+    const displayTab = document.getElementById("displayTab");
+    const adminTab   = document.getElementById("adminTab");
+    const displayBtn = document.getElementById("displayTabBtn");
+    const adminBtn   = document.getElementById("adminTabBtn");
+
+    if (tabName === "display") {
+        displayTab.classList.add("active");
+        adminTab.classList.remove("active");
+        displayBtn && displayBtn.classList.add("active");
+        adminBtn && adminBtn.classList.remove("active");
+    } else {
+        displayTab.classList.remove("active");
+        adminTab.classList.add("active");
+        displayBtn && displayBtn.classList.remove("active");
+        adminBtn && adminBtn.classList.add("active");
+    }
+}
+
+function openDisplayWindow() {
+    if (isDisplayOnly) return;
+    window.open(window.location.pathname + "?mode=display", "pokerDisplay");
+    saveState();
+}
+
+/* ---- 유틸 ---- */
+function formatMMSS(sec) {
+    let m = Math.floor(sec / 60);
+    let s = sec % 60;
+    return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+}
+function formatHHMMSS(sec) {
+    let h = Math.floor(sec / 3600);
+    let rem = sec % 3600;
+    let m = Math.floor(rem / 60);
+    let s = rem % 60;
+    return (h < 10 ? "0" + h : h) + ":" +
+           (m < 10 ? "0" + m : m) + ":" +
+           (s < 10 ? "0" + s : s);
+}
+function renumberLevels() {
+    structure.forEach((lv, i) => lv.level = i + 1);
+}
+
+/* ---- 렌더 ---- */
+function render(skipSave) {
+    const lv = structure[currentLevel];
+
+    const timerEl = document.getElementById("timer");
+    timerEl.textContent = formatMMSS(timeLeft);
+    timerEl.classList.toggle("break", lv.isBreak);
+
+    const breakLabel = document.getElementById("displayBreakLabel");
+    const blindsLine = document.getElementById("blindsLine");
+    const anteLine   = document.getElementById("anteLine");
+
+    if (lv.isBreak) {
+        breakLabel.textContent = "BREAK TIME";
+        blindsLine.textContent = "";
+        anteLine.textContent = "";
+    } else {
+        breakLabel.textContent = "";
+        blindsLine.textContent = `BLINDS: ${lv.sb} / ${lv.bb}`;
+        anteLine.textContent   = `ANTE: ${lv.ante}`;
+    }
+
+    const nextLevelLine = document.getElementById("nextLevelLine");
+    if (currentLevel < structure.length - 1) {
+        const nl = structure[currentLevel + 1];
+        if (nl.isBreak) {
+            nextLevelLine.textContent = `NEXT LEVEL: BREAK0${nl.level}`;
+        } else {
+            nextLevelLine.textContent =
+                `NEXT LEVEL: LV${nl.level} ${nl.sb} / ${nl.bb} / ANTE: ${nl.ante}`;
+        }
+    } else {
+        nextLevelLine.textContent = "NEXT LEVEL: - (END)";
+    }
+
+    document.getElementById("rightLevelLabel").textContent = `LEVEL ${lv.level}`;
+    document.getElementById("totalTimeDisplay").textContent = formatHHMMSS(elapsedSeconds);
+
+    const adminLv = document.getElementById("adminCurrentLevel");
+    if (adminLv) adminLv.textContent = lv.level;
+    const adminTimerText = document.getElementById("adminTimerText");
+    if (adminTimerText) adminTimerText.textContent = formatMMSS(timeLeft);
+    const adminBlindsText = document.getElementById("adminBlindsText");
+    if (adminBlindsText) {
+        if (lv.isBreak) adminBlindsText.textContent = "BREAK";
+        else adminBlindsText.textContent = `${lv.sb} / ${lv.bb} / ANTE ${lv.ante}`;
+    }
+
+    recalcChips(true);
+    renderLevelButtonsAdmin();
+    document.getElementById("nextBreakDisplay").textContent = calcNextBreakTime();
+
+    if (!skipSave) saveState();
+}
+
+/* ---- 다음 브레이크까지 남은 시간 ---- */
+function calcNextBreakTime() {
+    let idx = -1;
+    for (let i = currentLevel; i < structure.length; i++) {
+        if (structure[i].isBreak && i > currentLevel) {
+            idx = i;
+            break;
+        }
+    }
+    if (idx === -1) return "--:--:--";
+
+    let sec = timeLeft;
+    for (let i = currentLevel + 1; i < idx; i++) {
+        sec += structure[i].time * 60;
+    }
+    return formatHHMMSS(sec);
+}
+
+/* ---- 레벨 버튼/테이블 ---- */
+function renderLevelButtonsAdmin() {
+    const container = document.getElementById("levelButtonsAdmin");
+    if (!container) return;
+    container.innerHTML = "";
+    structure.forEach((lv, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "btn-small";
+        btn.textContent = lv.isBreak ? `B${lv.level}` : `L${lv.level}`;
+        if (idx === currentLevel) {
+            btn.style.background = "#ffcc33";
+            btn.style.color = "#111";
+            btn.style.fontWeight = "700";
+        }
+        btn.onclick = () => jumpToLevel(idx);
+        container.appendChild(btn);
+    });
+}
+
+function renderLevelTable() {
+    const tbody = document.getElementById("levelTableBody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    structure.forEach((lv, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${lv.level}</td>
+            <td><input type="number" value="${lv.sb}"  data-index="${idx}" data-type="sb"   style="width:70px;"></td>
+            <td><input type="number" value="${lv.bb}"  data-index="${idx}" data-type="bb"   style="width:70px;"></td>
+            <td><input type="number" value="${lv.ante}" data-index="${idx}" data-type="ante" style="width:70px;"></td>
+            <td><input type="number" value="${lv.time}" data-index="${idx}" data-type="time" style="width:70px;"></td>
+            <td><input type="checkbox" data-index="${idx}" data-type="break" ${lv.isBreak ? "checked" : ""}></td>
+            <td>
+                <button class="btn-small" onclick="applyLevelEdit(${idx})">저장</button>
+                <button class="btn-small" onclick="jumpToLevel(${idx})">이동</button>
+                <button class="btn-small" onclick="removeLevel(${idx})">삭제</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function addLevel() {
+    if (isDisplayOnly) return;
+    let base = structure[structure.length - 1];
+    const newLevel = {
+        level: structure.length + 1,
+        sb: base.sb || 100,
+        bb: base.bb || 200,
+        ante: base.ante || 0,
+        time: base.time || 20,
+        isBreak: false
+    };
+    structure.push(newLevel);
+    renumberLevels();
+    renderLevelTable();
+    render();
+    playBeep();
+}
+
+function removeLevel(idx) {
+    if (isDisplayOnly) return;
+    if (structure.length <= 1) {
+        alert("마지막 레벨은 삭제할 수 없습니다.");
+        return;
+    }
+    structure.splice(idx, 1);
+    if (currentLevel > idx) currentLevel--;
+    if (currentLevel >= structure.length) currentLevel = structure.length - 1;
+    renumberLevels();
+    timeLeft = structure[currentLevel].time * 60;
+    renderLevelTable();
+    render();
+    playBeep();
+}
+
+function applyLevelEdit(idx) {
+    if (isDisplayOnly) return;
+    const sbInput   = document.querySelector(`input[data-index="${idx}"][data-type="sb"]`);
+    const bbInput   = document.querySelector(`input[data-index="${idx}"][data-type="bb"]`);
+    const anteInput = document.querySelector(`input[data-index="${idx}"][data-type="ante"]`);
+    const timeInput = document.querySelector(`input[data-index="${idx}"][data-type="time"]`);
+    const breakChk  = document.querySelector(`input[data-index="${idx}"][data-type="break"]`);
+
+    const sb   = Number(sbInput.value);
+    const bb   = Number(bbInput.value);
+    const ante = Number(anteInput.value);
+    const time = Number(timeInput.value);
+
+    if (isNaN(time) || time <= 0) {
+        alert("시간(분)을 올바르게 입력해주세요.");
+        return;
+    }
+
+    structure[idx].sb   = isNaN(sb)   ? 0 : sb;
+    structure[idx].bb   = isNaN(bb)   ? 0 : bb;
+    structure[idx].ante = isNaN(ante) ? 0 : ante;
+    structure[idx].time = time;
+    structure[idx].isBreak = breakChk.checked;
+
+    if (idx === currentLevel) {
+        timeLeft = structure[idx].time * 60;
+    }
+    render();
+    playBeep();
+}
+
+/* ---- 타이머 ---- */
+function tick() {
+    if (!timerRunning) return;
+    elapsedSeconds++;
+    if (timeLeft > 0) {
+        timeLeft--;
+        render();
+    } else {
+        nextLevel();
+        playBeep();
+    }
+}
+
+function toggleTimer() {
+    if (isDisplayOnly) return;
+    if (timerRunning) {
+        timerRunning = false;
+        clearInterval(timer);
+    } else {
+        timerRunning = true;
+        timer = setInterval(tick, 1000);
+    }
+    saveState();
+}
+
+function resetTimer() {
+    if (isDisplayOnly) return;
+    timeLeft = structure[currentLevel].time * 60;
+    render();
+}
+
+function nextLevel() {
+    if (isDisplayOnly) return;
+    if (currentLevel < structure.length - 1) {
+        currentLevel++;
+    }
+    timeLeft = structure[currentLevel].time * 60;
+    render();
+    playBeep();
+}
+
+function prevLevel() {
+    if (isDisplayOnly) return;
+    if (currentLevel > 0) currentLevel--;
+    timeLeft = structure[currentLevel].time * 60;
+    render();
+    playBeep();
+}
+
+function jumpToLevel(idx) {
+    if (isDisplayOnly) return;
+    if (idx < 0 || idx >= structure.length) return;
+    currentLevel = idx;
+    timeLeft = structure[currentLevel].time * 60;
+    render();
+    playBeep();
+}
+
+/* ---- 소리 ---- */
+function playBeep() {
+    const beep = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+    beep.play();
+}
+
+/* ---- 칩 / 엔트리 ---- */
+function recalcChips(skipSave) {
+    if (buyInCount < 0) buyInCount = 0;
+    if (rebuyCount < 0) rebuyCount = 0;
+    if (reserveCount < 0) reserveCount = 0;
+
+    const totalChips =
+        buyInCount  * buyInStack +
+        rebuyCount  * rebuyStack +
+        reserveCount * reserveStack;
+
+    const avg = players > 0 ? Math.floor(totalChips / players) : 0;
+    const entryTotal = buyInCount + rebuyCount;
+
+    document.getElementById("entry").textContent = entryTotal;
+    document.getElementById("players").textContent = players;
+    document.getElementById("totalChips").textContent = totalChips.toLocaleString();
+    document.getElementById("avg").textContent = avg.toLocaleString();
+
+    const bi = document.getElementById("buyInCount");  if (bi) bi.textContent = buyInCount;
+    const rb = document.getElementById("rebuyCount");  if (rb) rb.textContent = rebuyCount;
+    const rv = document.getElementById("reserveCount");if (rv) rv.textContent = reserveCount;
+
+    const entryAdmin = document.getElementById("entryAdmin");
+    if (entryAdmin) entryAdmin.textContent = entryTotal;
+    const tcA = document.getElementById("totalChipsAdmin");
+    if (tcA) tcA.textContent = totalChips.toLocaleString();
+    const avgA = document.getElementById("avgAdmin");
+    if (avgA) avgA.textContent = avg.toLocaleString();
+
+    if (!skipSave) saveState();
+}
+
+function updateChipSettings() {
+    if (isDisplayOnly) return;
+    buyInStack   = Number(document.getElementById("buyInStackInput").value)   || 0;
+    rebuyStack   = Number(document.getElementById("rebuyStackInput").value)   || 0;
+    reserveStack = Number(document.getElementById("reserveStackInput").value) || 0;
+    recalcChips();
+}
+
+function addBuyIn(n) {
+    if (isDisplayOnly) return;
+    buyInCount += n;
+    recalcChips();
+}
+function addRebuy(n) {
+    if (isDisplayOnly) return;
+    rebuyCount += n;
+    recalcChips();
+}
+function addReserve(n) {
+    if (isDisplayOnly) return;
+    reserveCount += n;
+    recalcChips();
+}
+
+function updatePlayersFromAdmin() {
+    if (isDisplayOnly) return;
+    players = Number(document.getElementById("playerInputAdmin").value) || 0;
+    recalcChips();
+}
+
+/* ---- PRIZE / 텍스트 ---- */
+function applyPrizeText(skipSave) {
+    const prizeInput = document.getElementById("prizeInput");
+    if (prizeInput) {
+        prizeText = prizeInput.value;
+    }
+    const displayPrize = document.getElementById("displayPrizeText");
+    displayPrize.textContent = regClosed ? prizeText : "";
+    if (!skipSave) saveState();
+}
+function updatePrizeState() {
+    regClosed = document.getElementById("regClosedCheckbox").checked;
+    applyPrizeText();
+}
+function applyInfoTexts(skipSave) {
+    const mainTitleInput = document.getElementById("mainTitleInput");
+    const subTitleInput  = document.getElementById("subTitleInput");
+    const centerMainTitleInput = document.getElementById("centerMainTitleInput");
+    const centerTitleInput = document.getElementById("centerTitleInput");
+    const gameInfoInput  = document.getElementById("gameInfoInput");
+
+    const mainTitle = mainTitleInput ? mainTitleInput.value : "";
+    const subTitle  = subTitleInput ? subTitleInput.value : "";
+    const centerMainTitle = centerMainTitleInput ? centerMainTitleInput.value : "";
+    const centerTitle = centerTitleInput ? centerTitleInput.value : "";
+    const gameInfo  = gameInfoInput ? gameInfoInput.value : "";
+
+    document.getElementById("displayMainTitle").textContent  = mainTitle;
+    document.getElementById("displaySubTitle").textContent   = subTitle;
+    document.getElementById("displayCenterMainTitle").textContent = centerMainTitle;
+    document.getElementById("displayCenterTitle").textContent = centerTitle;
+    const gameInfoEl = document.getElementById("displayGameInfo");
+    gameInfoEl.textContent = "";
+    gameInfoEl.textContent = gameInfo;
+
+    if (!skipSave) saveState();
+}
+
+/* ---- 초기화 ---- */
+(function init() {
+    if (isDisplayOnly) {
+        const adminBtn = document.getElementById("adminTabBtn");
+        const openBtn  = document.getElementById("openDisplayBtn");
+        const displayBtn = document.getElementById("displayTabBtn");
+        const tabs = document.querySelector(".tabs");
+        const app = document.querySelector(".app-container");
+        const dispTab = document.getElementById("displayTab");
+
+        if (adminBtn) adminBtn.style.display = "none";
+        if (openBtn) openBtn.style.display = "none";
+        if (displayBtn) displayBtn.style.display = "none";
+        if (tabs) tabs.style.display = "none";
+        if (app) app.style.padding = "0";
+        if (dispTab) dispTab.style.height = "100vh";
+
+        showTab("display");
+    }
+
+    // 프리셋 먼저 로드
+    loadStructurePresets();
+
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            applyState(JSON.parse(saved));
+        } else {
+            renderLevelTable();
+            applyInfoTexts(true);
+            applyBackground(true);
+            render();
+        }
+    } catch (e) {
+        console.warn("상태 로드 실패:", e);
+        renderLevelTable();
+        applyInfoTexts(true);
+        applyBackground(true);
+        render();
+    }
+
+    if (!isDisplayOnly) {
+        timer = setInterval(tick, 1000);
+    } else {
+        timer = setInterval(() => { render(true); }, 1000);
+    }
+})();
+</script>
+
+</body>
+</html>
